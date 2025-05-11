@@ -25,8 +25,8 @@ static signed short *sampleBuffer;
 static int print_results = -(EI_CLASSIFIER_SLICES_PER_MODEL_WINDOW);
 
 void setup() {
-  Serial.begin(115200);
-  while (!Serial) delay(10);
+  Serial.begin(115200); // ini kalau makai kabel USB
+  while (!Serial) delay(10); // hilangkan ini jika ingin makai batrai LiPo (standalone)
   Serial.println("nRF52840 BLE Snore Detector");
 
   // Initialize BLE
