@@ -1,3 +1,4 @@
+//version: 1.0
 // BLE peripheral untuk nRF52840 yang mengirim data tiap 2 detik
 // Data terdiri dari status (0/1) dan timestamp (detik)
 // Gunakan library Adafruit Bluefruit untuk komunikasi BLE
