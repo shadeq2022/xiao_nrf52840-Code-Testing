@@ -1,4 +1,4 @@
-#define ENABLE_SERIAL false // Set false untuk versi baterai (stand alone)
+#define ENABLE_SERIAL false // Set false untuk versi baterai
 
 /* Edge Impulse ingestion SDK
  * Copyright (c) 2022 EdgeImpulse Inc.
