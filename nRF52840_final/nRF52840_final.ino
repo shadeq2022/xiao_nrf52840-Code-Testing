@@ -1,6 +1,6 @@
 #include <bluefruit.h>
 #include <PDM.h>
-#include <tes-spectogram4_inferencing.h>
+#include <snore-detection-final_inferencing.h>
 
 #define ENABLE_SERIAL false // Set false untuk versi baterai
 #define SERVICE_UUID        "12345678-1234-5678-1234-56789abcdef0"
@@ -97,12 +97,19 @@ void loop() {
     myCharacteristic.notify(data, 5);
     
     // Debug output
+    Serial.print("Timestamp: ");
+    Serial.println(timestamp);
+    Serial.print("DSP: ");
+    Serial.print(result.timing.dsp);
+    Serial.print(" ms, Classification: ");
+    Serial.print(result.timing.classification);
+    Serial.println(" ms");
+
     Serial.print("Snore: ");
     Serial.print(snore_status);
     Serial.print(", Confidence: ");
-    Serial.print(result.classification[1].value);
-    Serial.print(", Timestamp: ");
-    Serial.println(timestamp);
+    Serial.print(result.classification[1].value, 5);
+    Serial.println();
 
     print_results = 0;
   }
