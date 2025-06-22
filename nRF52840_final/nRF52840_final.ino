@@ -1,6 +1,6 @@
 #include <bluefruit.h>
 #include <PDM.h>
-#include <snore-detection-final_inferencing.h>
+#include <snore-detection-v4-fix_inferencing.h>
 
 #define ENABLE_SERIAL false // Set false untuk versi baterai
 #define SERVICE_UUID        "12345678-1234-5678-1234-56789abcdef0"
@@ -81,40 +81,50 @@ void loop() {
     return;
   }
 
-  // Send results periodically
+  // Kirim hasil secara periodik
   if (++print_results >= EI_CLASSIFIER_SLICES_PER_MODEL_WINDOW) {
-    // Get classification result (0: no snore, 1: snore)
-    uint8_t snore_status = (result.classification[1].value > 0.7) ? 1 : 0;
-    
-    // Prepare BLE data
+
+    // 1. Tampilkan informasi waktu proses dari model
+    ei_printf("Predictions (DSP: %d ms., Classification: %d ms., Anomaly: %d ms.):\n",
+              result.timing.dsp, result.timing.classification, result.timing.anomaly);
+
+    // 2. Cari label dengan skor kepercayaan tertinggi dan tampilkan semua hasil debug
+    float max_confidence = 0.0;
+    int predicted_index = -1;
+
+    for (int i = 0; i < EI_CLASSIFIER_LABEL_COUNT; i++) {
+      ei_printf("    %s: %.5f\n", result.classification[i].label, result.classification[i].value);
+      if (result.classification[i].value > max_confidence) {
+        max_confidence = result.classification[i].value;
+        predicted_index = i;
+      }
+    }
+    ei_printf("\n");
+
+    // 3. Tentukan snore_status berdasarkan label dengan skor tertinggi DAN ambang batas kepercayaan
+    uint8_t snore_status = 0;
+    if (predicted_index != -1 && 
+        strcmp(result.classification[predicted_index].label, "snoring") == 0 && 
+        result.classification[predicted_index].value > 0.8) { // <-- TAMBAHKAN KONDISI INI
+      snore_status = 1;
+    }
+
+    // 4. Siapkan data untuk dikirim via BLE
     uint8_t data[5];
     data[0] = snore_status;
-    
     uint32_t timestamp = millis() / 1000;
     memcpy(&data[1], &timestamp, 4);
 
-    // Send via BLE
+    // 5. Kirim data via BLE
     myCharacteristic.notify(data, 5);
     
-    // Debug output
-    Serial.print("Timestamp: ");
-    Serial.println(timestamp);
-    Serial.print("DSP: ");
-    Serial.print(result.timing.dsp);
-    Serial.print(" ms, Classification: ");
-    Serial.print(result.timing.classification);
-    Serial.println(" ms");
-
-    Serial.print("Snore: ");
-    Serial.print(snore_status);
-    Serial.print(", Confidence: ");
-    Serial.print(result.classification[1].value, 5);
-    Serial.println();
+    // 6. Tampilkan pesan debug tambahan untuk verifikasi
+    ei_printf("Detected sound: '%s' : confidence %.5f.\n", result.classification[predicted_index].label, max_confidence);
+    ei_printf("Sending BLE data -> snore_status: %d, timestamp: %lu\n\n", snore_status, timestamp);
 
     print_results = 0;
   }
 }
-
 /* Edge Impulse audio functions */
 static void pdm_data_ready_inference_callback(void) {
   int bytesAvailable = PDM.available();
